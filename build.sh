@@ -9,6 +9,7 @@ fi
 echo "Building $1"
 
 ROOT=$(pwd)
+mkdir -p $ROOT/out
 
 if [[ -d $1 ]]
 then

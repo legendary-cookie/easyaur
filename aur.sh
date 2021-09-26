@@ -8,6 +8,7 @@ fi
 echo "Building Package $1 from aur"
 
 ROOT=$(pwd)
+mkdir -p $ROOT/out
 
 if [[ -d $1 ]]
 then
