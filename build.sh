@@ -30,11 +30,11 @@ if [[ -d "repos" ]]; then
 	for f in **/PKGBUILD; do
 		cd $(echo $f|sed 's/PKGBUILD//g')
 		makepkg -sf
-		cp $1-*-$(uname -m).pkg.tar.* $ROOT/out
+		cp  *.pkg.tar.* $ROOT/out
 	done
 fi
 
 if [[ -f "PKGBUILD" ]]; then
 	makepkg -sf
-	cp $1-*-$(uname -m).pkg.tar.* $ROOT/out
+	cp  *.pkg.tar.* $ROOT/out
 fi

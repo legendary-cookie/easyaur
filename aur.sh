@@ -23,7 +23,16 @@ else
 	git clone ssh://aur@aur.archlinux.org/$1 $1
 	cd $1
 	touch .AUR
+	if [[ -e "PKGBUILD" ]]; then
+		echo "Valid AUR package!"
+	else
+		cd ..
+		rm -rf $1
+		echo "Package does not exist on the AUR"
+		exit
+	fi
 fi
 
 makepkg -sf
-cp $1-*-$(uname -m).pkg.tar.* $ROOT/out
+
+cp  *.pkg.tar.* $ROOT/out
