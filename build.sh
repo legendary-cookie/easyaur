@@ -17,7 +17,7 @@ then
 	asp update
 	git pull
 else 
-	asp export $1 1>/dev/null 2>&1
+	asp export $1
 	if [ $? -ne 0 ]; then
 	   echo "Package $1 does not exist / errors while cloning"
 	   exit
@@ -25,11 +25,16 @@ else
 	cd $1
 fi
 
-cd repos
+if [[ -d "repos" ]]; then
+	cd repos
+	for f in **/PKGBUILD; do
+		cd $(echo $f|sed 's/PKGBUILD//g')
+		makepkg -sf
+		cp $1-*-$(uname -m).pkg.tar.* $ROOT/out
+	done
+fi
 
-for f in **/PKGBUILD
-do
-	cd $(echo $f|sed 's/PKGBUILD//g')
+if [[ -f "PKGBUILD" ]]; then
 	makepkg -sf
 	cp $1-*-$(uname -m).pkg.tar.* $ROOT/out
-done
+fi
