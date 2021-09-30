@@ -5,7 +5,8 @@ echo () {
 	then
 		builtin echo "$@"
 	else
-		builtin echo "$@" | tee -a /srv/logs/builder.log
+#		builtin echo "$@" | tee -a /srv/logs/builder.log
+		builtin echo "$@"
 	fi
 }
 
