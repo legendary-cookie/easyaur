@@ -1,16 +1,30 @@
-#!/bin/sh
+#!/bin/bash
+
+echo () {
+	if [[ ! -z "$2" ]]
+	then
+		builtin echo "$@"
+	else
+		builtin echo "$@" | tee -a /srv/logs/builder.log
+	fi
+}
 
 if [[ $# -eq 0 ]]
 then
 	echo "Provide the package to build!"
 	exit
 fi
-
-echo "Building $1"
-
+echo "Building: $1"
+# Save pwd for later
 ROOT=$(pwd)
+echo "Current workdir: $ROOT"
+# Create the out dir
 mkdir -p $ROOT/out
+# Gets current date for use as $now
+now=$(date +'%d-%m-%Y-%r')
+echo $now
 
+# Checks if already cloned
 if [[ -d $1 ]]
 then
 	cd $1
@@ -20,7 +34,7 @@ then
 else 
 	asp export $1
 	if [ $? -ne 0 ]; then
-	   echo "Package $1 does not exist / errors while cloning"
+	   echo "Package '$1' does not exist / errors while cloning"
 	   exit
 	fi	
 	cd $1
