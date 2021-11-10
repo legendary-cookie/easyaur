@@ -10,11 +10,9 @@ echo () {
 	fi
 }
 
-if [[ $# -eq 0 ]]
-then
-	echo "Provide the package to build!"
-	exit
-fi
+
+build () {
+
 echo "Building: $1"
 # Save pwd for later
 ROOT=$(pwd)
@@ -54,3 +52,17 @@ if [[ -f "PKGBUILD" ]]; then
 	makepkg -sf --nocheck --skippgpcheck --sign
 	cp  *.pkg.tar.* $ROOT/out
 fi
+}
+
+if [[ $# -eq 0 ]]
+then
+        echo "Provide the package to build!"
+        exit
+fi
+
+for pkg in "$@"
+do
+	build "$pkg" &
+done
+
+wait
