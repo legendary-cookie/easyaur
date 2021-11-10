@@ -34,6 +34,6 @@ else
 	fi
 fi
 
-makepkg -sf
+makepkg -sf --sign --nocheck --skippgpcheck
 
 cp  *.pkg.tar.* $ROOT/out
