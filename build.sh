@@ -62,7 +62,7 @@ fi
 
 for pkg in "$@"
 do
-	build "$pkg" &
+	build "$pkg"
 done
 
 wait
