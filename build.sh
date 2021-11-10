@@ -45,12 +45,12 @@ if [[ -d "repos" ]]; then
 	cd repos
 	for f in **/PKGBUILD; do
 		cd $(echo $f|sed 's/PKGBUILD//g')
-		makepkg -sf
+		makepkg -sf --nocheck --skippgpcheck
 		cp  *.pkg.tar.* $ROOT/out
 	done
 fi
 
 if [[ -f "PKGBUILD" ]]; then
-	makepkg -sf
+	makepkg -sf --nocheck --skippgpcheck
 	cp  *.pkg.tar.* $ROOT/out
 fi
