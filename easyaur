@@ -155,7 +155,7 @@ eza_build() {
 subcommand=$1
 case $subcommand in
 "" | "-h" | "--help")
-	sub_help
+	eza_help
 	;;
 *)
 	shift
