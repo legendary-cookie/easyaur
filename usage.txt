@@ -3,6 +3,3 @@ Make sure you have the asp package installed
 
 ./build.sh PKG
 
-To build an AUR package:
-
-./aur.sh PKG
