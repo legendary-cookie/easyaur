@@ -57,13 +57,13 @@ aurbuild() {
 	if [[ -d $1 ]]; then
 		cd $1
 		if [[ -f .AUR ]]; then
-			git pull
+			git pull --quiet
 		else
 			echo "$1 is not an AUR package! Try deleting the folder $(realpath $1)"
 			exit 1
 		fi
 	else
-		if git clone "https://aur.archlinux.org/$1.git/" "$1"; then
+		if git clone "https://aur.archlinux.org/$1.git/" "$1" --quiet; then
 			cd $1
 			touch .AUR
 			if [[ ! -e "PKGBUILD" ]]; then
