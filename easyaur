@@ -35,6 +35,7 @@ eza_help() (
 	echo "Subcommands:"
 	echo "	build	Build a package"
 	echo "	refreshcaches	Refresh the package lists"
+	echo "	setup	Setup the $buildspace directory"
 	echo ""
 	echo "For help with each subcommand run:"
 	echo "$ProgName <subcommand> -h|--help"
