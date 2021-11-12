@@ -8,6 +8,7 @@
 
 # Program info
 ProgName=$(basename $0)
+ROOT=$(pwd)
 # Colors
 bold="$(tput bold)"
 red="$(tput setaf 160)"
@@ -53,7 +54,6 @@ move_built_pkgs() (
 
 aurbuild() (
 	echo "Building Package $1 from aur"
-	ROOT=$(pwd)
 	mkdir -p $ROOT/out
 	loc="$buildspace/$1"
 	if [[ -d $loc ]]; then
@@ -88,8 +88,6 @@ aurbuild() (
 
 build() (
 	echo "Building: $1"
-	# Save pwd for later
-	ROOT=$(pwd)
 	echo "Current workdir: $ROOT"
 	# Create the out dir
 	mkdir -p $ROOT/out
