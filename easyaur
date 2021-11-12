@@ -26,11 +26,11 @@ echo() {
 	fi
 }
 
-pkg() {
-	makepkg
-}
+pkg() (
+	makepkg -s --nocheck --skippgpcheck --sign
+)
 
-eza_help() {
+eza_help() (
 	echo "Usage: $ProgName <subcommand> [options]"
 	echo "Subcommands:"
 	echo "	build	Build a package"
@@ -39,36 +39,37 @@ eza_help() {
 	echo "For help with each subcommand run:"
 	echo "$ProgName <subcommand> -h|--help"
 	echo ""
-}
+)
 
-eza_refreshcaches() {
+eza_refreshcaches() (
 	wget https://aur.archlinux.org/packages.gz -O - | gunzip >$aurloc
 	pacman -Sql core community extra multilib >$offloc
-}
+)
 
 move_built_pkgs() (
 	cp *.pkg.tar.* $ROOT/out
 )
 
-aurbuild() {
+aurbuild() (
 	echo "Building Package $1 from aur"
 	ROOT=$(pwd)
 	mkdir -p $ROOT/out
-	if [[ -d $1 ]]; then
-		cd $1
+	loc="$buildspace/$1"
+	if [[ -d $loc ]]; then
+		cd $loc
 		if [[ -f .AUR ]]; then
 			git pull --quiet
 		else
-			echo "$1 is not an AUR package! Try deleting the folder $(realpath $1)"
+			echo "$1 is not an AUR package! Try deleting the folder $(realpath $loc)"
 			exit 1
 		fi
 	else
-		if git clone "https://aur.archlinux.org/$1.git/" "$1" --quiet; then
-			cd $1
+		if git clone "https://aur.archlinux.org/$1.git/" "$loc" --quiet; then
+			cd $loc
 			touch .AUR
 			if [[ ! -e "PKGBUILD" ]]; then
 				cd ..
-				rm -rf $1
+				rm -rf $loc
 				echo $boldred"$1 is not available on the AUR!"
 				echo $boldred"Try refreshing your package cache (refreshcache subcommand)"
 				exit 1
@@ -82,10 +83,9 @@ aurbuild() {
 	pkg
 	move_built_pkgs
 
-}
+)
 
-build() {
-
+build() (
 	echo "Building: $1"
 	# Save pwd for later
 	ROOT=$(pwd)
@@ -95,20 +95,21 @@ build() {
 	# Gets current date for use as $now
 	now=$(date +'%d-%m-%Y-%r')
 	echo "$now"
-
+	loc="$buildspace/$1"
 	# Checks if already cloned
-	if [[ -d $1 ]]; then
-		cd $1
+	if [[ -d $loc ]]; then
+		cd $loc
 		[[ -f ".AUR" ]] && echo "$1 Is an AUR package!" && exit
 		asp update
 		git pull
 	else
+		cd $buildspace
 		asp export $1
 		if [ $? -ne 0 ]; then
 			echo "Package '$1' does not exist / errors while cloning"
 			exit
 		fi
-		cd $1
+		cd $loc
 	fi
 
 	if [[ -f "PKGBUILD" ]]; then
@@ -122,15 +123,14 @@ build() {
 	fi
 
 	cd $ROOT
-}
+)
 
-eza_setup() {
+eza_setup() (
 	mkdir -pv $buildspace
 	sub_refreshcaches
-}
+)
 
-eza_build() {
-
+eza_build() (
 	if [[ $# -eq 0 ]]; then
 		echo "Provide the package to build!"
 		exit 1
@@ -149,8 +149,7 @@ eza_build() {
 			fi
 		fi
 	done
-
-}
+)
 
 subcommand=$1
 case $subcommand in
