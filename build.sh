@@ -13,8 +13,10 @@ bold="$(tput bold)"
 red="$(tput setaf 160)"
 boldred="$bold$red"
 # Locs
-aurloc="$HOME/.aurpkgs"
-offloc="$HOME/.pkglist"
+buildspace="$HOME/.pkgbuilder"
+aurloc="$buildspace/aurpkgs"
+offloc="$buildspace/pkglist"
+
 # Functions and main logic
 echo () {
 	if [[ ! -z "$2" ]]
@@ -64,7 +66,6 @@ then
 		exit 1
 	fi
 else
-	#git clone ssh://aur@aur.archlinux.org/$1 $1
 	if git clone "https://aur.archlinux.org/$1.git/" "$1"
 	then
 	cd $1
@@ -126,6 +127,11 @@ if [[ -f "PKGBUILD" ]]; then
 fi
 
 cd $ROOT
+}
+
+sub_setup() {
+	mkdir -pv $buildspace
+	sub_refreshcaches
 }
 
 sub_build(){
