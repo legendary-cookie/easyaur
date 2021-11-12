@@ -1,5 +1,4 @@
 To build a package from official repos:
 Make sure you have the asp package installed
 
-./build.sh PKG
-
+./ezaur PKG
