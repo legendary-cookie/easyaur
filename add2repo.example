@@ -1,0 +1,44 @@
+#!/bin/sh
+#########################################
+#   COPYRIGHT 2021 VINCENT SCHWEIGER	#
+#   THIS SCRIPT IS LICENSED UNDER THE	#
+#	COSMO LICENSE.			#
+#	RESPECT IT IN ANY WAY.		#
+#########################################
+
+#################
+### Variables ###
+#################
+
+# Can be any path
+repo=/PATH/TO/REPOSITORY
+# The repository name is the name, that is needed in the /etc/pacman.conf
+reponame=REPONAME
+
+##################
+### Main logic ###
+##################
+
+# Checks if the repo dir exists, if not creates it
+if [[ ! -d $repo ]]; then
+	mkdir -p $repo
+fi
+
+# Checks for existance of argument
+if [ -z "$1" ]
+  then
+    echo "You have to supply a path to the [package].pkg.tar.* of the package you want to add to your repo!"
+fi
+
+# Copy the provided package file to the repo dir
+cp "$1" "$repo"
+
+# If a signature file exists, copy it too
+if [[ -f "$1.sig" ]]; then
+	echo "sig file exists, copying too..."
+	cp "$1.sig" "$repo"
+fi
+
+# Chdir into repo dir and create/update database file with signature
+cd $repo
+repo-add vrep.db.tar.gz $(basename $1) --sign
