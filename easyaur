@@ -49,12 +49,12 @@ eza_refreshcaches() (
 )
 
 move_built_pkgs() (
-	cp *.pkg.tar.* $ROOT/out
+	mkdir -p $ROOT/out/
+	cp *.pkg.tar.* $ROOT/out/
 )
 
 aurbuild() (
 	echo "Building Package $1 from aur"
-	mkdir -p $ROOT/out
 	loc="$buildspace/$1"
 	if [[ -d $loc ]]; then
 		cd $loc
@@ -89,8 +89,6 @@ aurbuild() (
 build() (
 	echo "Building: $1"
 	echo "Current workdir: $ROOT"
-	# Create the out dir
-	mkdir -p $ROOT/out
 	# Gets current date for use as $now
 	now=$(date +'%d-%m-%Y-%r')
 	echo "$now"
@@ -139,16 +137,20 @@ eza_build() (
 		if [[ $pkg == "local" ]]; then
 			pkg
 			move_built_pkgs
+			continue
 		fi
 		if grep -Fxq "$pkg" "$offloc"; then
 			echo "Building official package ..."
 			build "$pkg"
+			continue
 		else
 			if grep -Fxq "$pkg" "$aurloc"; then
 				echo "Building AUR package ..."
 				aurbuild "$pkg"
+				continue
 			else
 				echo $boldred"The specified package does not exist on the AUR nor on the normal repos!"
+				continue
 			fi
 		fi
 	done
