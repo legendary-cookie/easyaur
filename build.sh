@@ -144,12 +144,12 @@ fi
 
 for pkg in "$@"
 do
-	if grep -Fxq "$pkg" "$HOME/.pkglist"
+	if grep -Fxq "$pkg" "$offloc"
 	then
 		echo "Building official package ..."
 		build "$pkg"		
 	else 
-		if grep -Fxq "$pkg" "$HOME/.aurpkgs"
+		if grep -Fxq "$pkg" "$aurloc"
 		then
 			echo "Building AUR package ..."
 			aurbuild "$pkg"
