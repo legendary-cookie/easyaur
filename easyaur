@@ -168,6 +168,10 @@ eza_clean() (
 )
 
 eza_addall() (
+	if [[ ! "$(which add2repo)" ]]; then
+		echo $boldred"You have to supply an 'add2repo' script (name it exactly like that!) and make it accessible through your \$PATH!"
+		exit 1
+	fi
 	for f in $(find $outdir -type f ! -name "*.sig")
 	do
 		add2repo $f
