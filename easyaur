@@ -15,6 +15,7 @@ red="$(tput setaf 160)"
 boldred="$bold$red"
 # Locs
 buildspace="$HOME/.pkgbuilder"
+outdir="$buildspace/out"
 aurloc="$buildspace/aurpkgs"
 offloc="$buildspace/pkglist"
 
@@ -49,8 +50,8 @@ eza_refreshcaches() (
 )
 
 move_built_pkgs() (
-	mkdir -p $ROOT/out/
-	cp *.pkg.tar.* $ROOT/out/
+	mkdir -p $outdir
+	cp *.pkg.tar.* $outdir
 )
 
 aurbuild() (
