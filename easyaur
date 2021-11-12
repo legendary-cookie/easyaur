@@ -38,6 +38,8 @@ eza_help() (
 	echo "	build	Build a package"
 	echo "	refreshcaches	Refresh the package lists"
 	echo "	setup	Setup the $buildspace directory"
+	echo "	clean	Delete every directory from $buildspace"
+	echo "	addall	Add every package in $outdir and delete it from there"
 	echo ""
 	echo "For help with each subcommand run:"
 	echo "$ProgName <subcommand> -h|--help"
@@ -154,6 +156,22 @@ eza_build() (
 				continue
 			fi
 		fi
+	done
+)
+
+eza_clean() (
+	for f in $(find $buildspace -maxdepth 1 -type d)
+	do
+		[[ $f == "." ]] && continue
+		rm -rf $f
+	done
+)
+
+eza_addall() (
+	for f in $(find $outdir -type f ! -name "*.sig")
+	do
+		add2repo $f
+		rm $f
 	done
 )
 
