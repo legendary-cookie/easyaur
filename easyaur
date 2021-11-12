@@ -49,7 +49,7 @@ eza_help() (
 )
 
 eza_refreshcaches() (
-	wget https://aur.archlinux.org/packages.gz -O - | gunzip >$aurloc
+	curl https://aur.archlinux.org/packages.gz | gunzip >$aurloc
 	pacman -Sql core community extra multilib >$offloc
 )
 
