@@ -30,7 +30,7 @@ pkg() {
 	makepkg
 }
 
-sub_help() {
+eza_help() {
 	echo "Usage: $ProgName <subcommand> [options]"
 	echo "Subcommands:"
 	echo "	build	Build a package"
@@ -41,7 +41,7 @@ sub_help() {
 	echo ""
 }
 
-sub_refreshcaches() {
+eza_refreshcaches() {
 	wget https://aur.archlinux.org/packages.gz -O - | gunzip >$aurloc
 	pacman -Sql core community extra multilib >$offloc
 }
@@ -124,12 +124,12 @@ build() {
 	cd $ROOT
 }
 
-sub_setup() {
+eza_setup() {
 	mkdir -pv $buildspace
 	sub_refreshcaches
 }
 
-sub_build() {
+eza_build() {
 
 	if [[ $# -eq 0 ]]; then
 		echo "Provide the package to build!"
@@ -159,7 +159,7 @@ case $subcommand in
 	;;
 *)
 	shift
-	sub_${subcommand} $@
+	eza_${subcommand} $@
 	if [ $? = 127 ]; then
 		echo "Error: '$subcommand' is not a known subcommand." >&2
 		echo "       Run '$ProgName --help' for a list of known subcommands." >&2
