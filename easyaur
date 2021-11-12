@@ -138,6 +138,10 @@ eza_build() (
 	fi
 
 	for pkg in "$@"; do
+		if [[ $pkg == "local" ]]; then
+			pkg
+			move_built_pkgs
+		fi
 		if grep -Fxq "$pkg" "$offloc"; then
 			echo "Building official package ..."
 			build "$pkg"
