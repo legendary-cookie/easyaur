@@ -42,11 +42,133 @@ eza_help() (
 	echo "	clean	Delete every directory from $buildspace"
 	echo "	addall	Add every package in $outdir and delete it from there"
 	echo "	version	Displays version information"
+	echo "	repo	Big subcommand, run it with --help"
 	echo ""
 	echo "For help with each subcommand run:"
 	echo "$ProgName <subcommand> -h|--help"
 	echo ""
 )
+
+eza_repo() {
+
+	# sh format
+	conf="$HOME/.ezrepo"
+
+	ezr_help() (
+		echo "Usage: $ProgName repo <subcommand> [options]"
+	)
+
+	ezr_setup() {
+		echo "Creating config file ..."
+		touch $conf
+		echo "Enter the name for the repository (e.g. like core/community/multilib)"
+		read reponame
+		echo "Enter the absolute path where the repository should be stored"
+		read repoloc
+		echo "Enter the port where the repository should get served"
+		read portnum
+		echo "Should the database and packages be signed? [Y/n]"
+		read sign
+		echo "#!/bin/sh" >$conf
+		echo "##### CONFIG ######" >>$conf
+		echo "repoloc=$repoloc" >>$conf
+		echo "reponame=$reponame" >>$conf
+		echo "portnum=$portnum" >>$conf
+		if [[ "$sign" == "y" ]] || [[ "$sign" == "Y" ]] || [[ "$sign" == "" ]]; then
+			echo "sign=yes" >>$conf
+		else
+			echo "sign=no" >>$conf
+		fi
+		echo "Created the config file at $conf!"
+		echo "Finishing now ..."
+		mkdir -p $repoloc
+		echo "(sudo) Creating service file"
+		sudo sh -c "cat > /etc/systemd/system/easyrepo.service <<- EOF
+[Unit]
+Description=Serve your archlinux repository
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+ExecStart=/usr/bin/easyaur repo serve $conf
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+	EOF"
+		echo "(sudo) Reloading daemon files and starting+enabling the service"
+		sudo systemctl daemon-reload
+		sudo systemctl enable --now easyrepo
+	}
+
+	ezr_serve() (
+		if [[ ! -f $1 ]]; then
+			echo $boldred"You first have to run '$ProgName repo setup'!"
+		else
+			source $1
+			cd $repoloc
+			python -m http.server $portnum
+		fi
+	)
+
+	ezr_add() (
+		if [[ ! -f $conf ]]; then
+			echo $boldred"You first have to run '$ProgName repo setup'!"
+		else
+			source $conf
+			if [ -z "$1" ]; then
+				echo $boldred"You have to supply a path to the .pkg.tar.* of the package you want to add!"
+				exit 1
+			fi
+			if [[ -f "$1.sig" ]]; then
+				cp "$1.sig" "$repoloc"
+			else
+				if [[ $sign == "yes" ]]; then
+					echo $boldred"You have to build a signed package as you have enabled package signing in your config!"
+					exit 1
+				fi
+			fi
+			cp "$1" "$repoloc"
+			cd $repoloc
+			if [[ $sign == "yes" ]]; then
+				repo-add $reponame.db.tar.gz $(basename $1) --sign
+			else
+				repo-add $reponame.db.tar.gz $(basename $1)
+			fi
+		fi
+	)
+
+	ezr_remove() (
+		if [[ ! -f $conf ]]; then
+			echo $boldred"You first have to run '$ProgName repo setup'!"
+		else
+			source $conf
+			if [ -z "$1" ]; then
+				echo $boldred"You have to supply a path to the .pkg.tar.* of the package you want to add!"
+				exit 1
+			fi
+			cd $repoloc
+			repo-remove $reponame.db.tar.gz $1
+		fi
+	)
+
+	subcommand=$1
+	case $subcommand in
+	"" | "-h" | "--help")
+		ezr_help
+		;;
+	*)
+		shift
+		ezr_${subcommand} $@
+		if [ $? = 127 ]; then
+			echo "Error: '$subcommand' is not a known subcommand." >&2
+			echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+			exit 1
+		fi
+		;;
+	esac
+}
 
 eza_refreshcaches() (
 	curl https://aur.archlinux.org/packages.gz | gunzip >$aurloc
@@ -170,22 +292,17 @@ eza_build() (
 )
 
 eza_clean() (
-	for f in $(find $buildspace -maxdepth 1 -type d)
-	do
+	for f in $(find $buildspace -maxdepth 1 -type d); do
 		[[ $f == "." ]] && continue
 		rm -rf $f
 	done
 )
 
 eza_addall() (
-	if [[ ! "$(which add2repo)" ]]; then
-		echo $boldred"You have to supply an 'add2repo' script (name it exactly like that!) and make it accessible through your \$PATH!"
-		exit 1
-	fi
-	for f in $(find $outdir -type f ! -name "*.sig")
-	do
-		add2repo $f
+	for f in $(find $outdir -type f ! -name "*.sig"); do
+		eza_repo add $f
 		rm $f
+		rm $f.sig
 	done
 )
 
