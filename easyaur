@@ -8,7 +8,7 @@
 
 # Program info
 ProgName=$(basename $0)
-VERSION="1.0.0"
+VERSION="1.1.0"
 ROOT=$(pwd)
 # Colors
 bold="$(tput bold)"
@@ -57,7 +57,7 @@ eza_version() (
 	echo "EasyAUR version $VERSION"
 	echo ""
 	echo "This project is licensed under GPLv3, respect the license in any way."
-	echo "Please report bugs and ideas to https://github.com/legendary-cookie/easyaur/issues!"
+	echo "Please report bugs and send feature requests/ideas to https://github.com/legendary-cookie/easyaur/issues!"
 	echo ""
 )
 
