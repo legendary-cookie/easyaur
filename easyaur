@@ -8,7 +8,7 @@
 
 # Program info
 ProgName=$(basename $0)
-VERSION="1.1.0"
+VERSION="1.2"
 ROOT=$(pwd)
 # Colors
 bold="$(tput bold)"
@@ -31,6 +31,19 @@ echo() {
 
 pkg() (
 	makepkg -s --nocheck --skippgpcheck --sign
+)
+
+eza_search() (
+	echo "Searching in official repo package list ..."
+	if rg -q "$1" "$offloc"; then
+		echo "Package is available in the official repositories!"
+	else
+		if rg -q "$1" "$aurloc"; then
+			echo "Package is available in the AUR!"
+		else
+			echo $boldred"Couldn't find a package with that name, sorry!"
+		fi
+	fi
 )
 
 eza_help() (
