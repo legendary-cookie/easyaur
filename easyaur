@@ -56,6 +56,7 @@ eza_help() (
 	echo "	addall	Add every package in $outdir and delete it from there"
 	echo "	version	Displays version information"
 	echo "	repo	Big subcommand, run it with --help"
+	echo "	search	Search for a package"
 	echo ""
 	echo "For help with each subcommand run:"
 	echo "$ProgName <subcommand> -h|--help"
