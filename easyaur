@@ -39,11 +39,16 @@ pkg() (
 
 eza_search() (
 	echo $gray"Searching in official repo package list ..."
-	if rg -q "^$1\$" "$offloc"; then
+	grep="grep"
+	if command "rg" &>/dev/null; then
+		# Fallback to grep if ripgrep is not available
+		grep="rg"
+	fi
+	if $grep -q "^$1\$" "$offloc"; then
 		echo "${boldgreen}Package is available in the official repositories!"
 	else
 		echo "${gray}Searching in AUR package list ..."
-		if rg -q "^$1\$" "$aurloc"; then
+		if $grep -q "^$1\$" "$aurloc"; then
 			echo "${boldgreen}Package is available in the AUR!"
 		else
 			echo "${boldred}Couldn't find a package with that name, sorry!"
@@ -202,11 +207,34 @@ WantedBy=multi-user.target
 	esac
 }
 
+pkgtar_to_list () (
+	tarloc="$1"
+	tempdir="$(mktemp -d)"
+	cd $tempdir
+	tar xf $tarloc -C $tempdir
+	for f in $(find . -maxdepth 1 -type d)
+	do
+		echo $f|sed 's/\.\///g'|sed 's/-[0-9].*$//'
+	done
+	cd /tmp
+	rm -rf $tempdir
+)
+
 eza_refreshcaches() (
+	REPO_LIST="core community extra multilib"
 	echo "${gray}Refreshing packagelists ..."
 	rm -f $aurloc $offloc
 	curl -sSL https://aur.archlinux.org/packages.gz | gunzip >$aurloc
-	pacman -Sql core community extra multilib >$offloc
+	for repo in $REPO_LIST
+	do
+		echo "${gray}Getting packages from $repo"
+		if [[ -f "/etc/arch-release" ]]; then
+			pacman -Sql $repo >>$offloc
+		else
+			curl -sSL "https://mirrors.kernel.org/archlinux/$repo/os/x86_64/$repo.db" -o - > "/tmp/$repo.tar.gz"
+			pkgtar_to_list "/tmp/$repo.tar.gz" >> $offloc
+		fi
+	done
 	echo "${boldgreen}Refreshed packagelists!"
 )
 
@@ -295,6 +323,28 @@ build() (
 eza_setup() (
 	mkdir -pv $buildspace
 	eza_refreshcaches
+	if [[ ! -f "/etc/arch-release" ]]; then
+		echo "${gray}Not on archlinux/arch-based distro, downloading helper scripts"
+		if [[ ! -f "/usr/local/bin/makepkg" ]]; then
+			echo "${gray}(sudo) Downloading makepkg to /usr/local/bin/ ..."
+			sudo curl -sSL https://raw.githubusercontent.com/legendary-cookie/easyscripts/main/makepkg -o /usr/local/bin/makepkg 
+			sudo chmod +x /usr/local/bin/makepkg
+        	fi
+		if [[ ! -f "/usr/local/bin/asp" ]]; then
+			sudo curl -sSL https://raw.githubusercontent.com/legendary-cookie/easyscripts/main/asp -o /usr/local/bin/asp
+			sudo chmod +x /usr/local/bin/asp
+		fi
+		sudo curl -sSL https://raw.githubusercontent.com/legendary-cookie/easyscripts/main/makepkg.conf -o /etc/makepkg.conf
+		if [[ ! -d "/usr/share/makepkg" ]]; then
+			echo "${gray}Downloading makepkg scripts ..."
+			curl -sSL https://github.com/legendary-cookie/easyscripts/raw/main/makepkg.tar.xf > /tmp/makepkg.tar.xf
+			echo "${gray}(sudo) Unpacking makepkg scripts to / ..."
+			sudo tar xvf /tmp/makepkg.tar.xf -C /
+			echo "${gray}Cleaning up ..."
+			rm -f /tmp/makepkg.tar.xf
+		fi
+		echo "${boldgreen}Downloaded all helper scripts!"
+	fi
 )
 
 eza_build() (
