@@ -185,6 +185,7 @@ WantedBy=multi-user.target
 }
 
 eza_refreshcaches() (
+	rm -f $aurloc $offloc
 	curl https://aur.archlinux.org/packages.gz | gunzip >$aurloc
 	pacman -Sql core community extra multilib >$offloc
 )
