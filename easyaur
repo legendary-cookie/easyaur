@@ -10,7 +10,7 @@
 ProgName=$(basename $0)
 VERSION="1.3"
 ROOT=$(pwd)
-# Colors
+# Colours
 bold="$(tput bold)"
 red="$(tput setaf 160)"
 green="$(tput setaf 40)"
@@ -40,13 +40,13 @@ pkg() (
 eza_search() (
 	echo $gray"Searching in official repo package list ..."
 	if rg -q "^$1\$" "$offloc"; then
-		echo $boldgreen"Package is available in the official repositories!"
+		echo "${boldgreen}Package is available in the official repositories!"
 	else
-		echo $gray"Searching in AUR package list ..."
+		echo "${gray}Searching in AUR package list ..."
 		if rg -q "^$1\$" "$aurloc"; then
-			echo $boldgreen"Package is available in the AUR!"
+			echo "${boldgreen}Package is available in the AUR!"
 		else
-			echo $boldred"Couldn't find a package with that name, sorry!"
+			echo "${boldred}Couldn't find a package with that name, sorry!"
 		fi
 	fi
 )
@@ -55,10 +55,10 @@ eza_help() (
 	echo "Usage: $ProgName <subcommand> [options]"
 	echo "Subcommands:"
 	echo "	build	Build a package"
-	echo "	refreshcaches	Refresh the package lists"
-	echo "	setup	Setup the $buildspace directory"
-	echo "	clean	Delete every directory from $buildspace"
-	echo "	addall	Add every package in $outdir and delete it from there"
+	echo "	rfc	Refresh the package lists"
+	echo "	setup	Setup the '$buildspace' directory"
+	echo "	clean	Delete every directory from '$buildspace'"
+	echo "	addall	Adds every built package to repo"
 	echo "	version	Displays version information"
 	echo "	repo	Big subcommand, run it with --help"
 	echo "	search	Search for a package"
@@ -75,18 +75,25 @@ eza_repo() {
 
 	ezr_help() (
 		echo "Usage: $ProgName repo <subcommand> [options]"
+		echo ""
+		echo "Subcommands:"
+		echo "	add	Add a package to the repo"
+		echo "	remove	Remove a package from the repo"
+		echo "	setup	Setup the repository"
+		echo "	serve	Start the http server"
+		echo ""
 	)
 
 	ezr_setup() {
-		echo $gray"Creating config file ..."
+		echo "${gray}Creating config file ..."
 		touch $conf
-		echo $bold"Enter the name for the repository (e.g. like core/community/multilib)"
+		echo "${bold}Enter the name for the repository (e.g. like core/community/multilib)"
 		read reponame
-		echo $bold"Enter the absolute path where the repository should be stored"
+		echo "${bold}Enter the absolute path where the repository should be stored"
 		read repoloc
-		echo $bold"Enter the port where the repository should get served"
+		echo "${bold}Enter the port where the repository should get served"
 		read portnum
-		echo $bold"Should the database and packages be signed? [Y/n]"
+		echo "${bold}Should the database and packages be signed? [Y/n]"
 		read sign
 		echo "#!/bin/sh" >$conf
 		echo "##### CONFIG ######" >>$conf
@@ -98,10 +105,10 @@ eza_repo() {
 		else
 			echo "sign=no" >>$conf
 		fi
-		echo $boldgreen"Created the config file at $conf!"
-		echo $gray"Finishing now ..."
-		mkdir -p $repoloc
-		echo $gray"(sudo) Creating service file"
+		echo "${boldgreen}Created the config file at ${conf}!"
+		echo "${reset}${gray}Finishing now ..."
+		mkdir -p "$repoloc"
+		echo "${gray}(sudo) Creating service file"
 		sudo sh -c "cat > /etc/systemd/system/easyrepo.service <<- EOF
 [Unit]
 Description=Serve your archlinux repository
@@ -116,18 +123,18 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 	EOF"
-		echo $gray"(sudo) Reloading daemon files and starting+enabling the service"
+		echo "${gray}(sudo) Reloading daemon files and starting+enabling the service"
 		sudo systemctl daemon-reload
 		sudo systemctl enable --now easyrepo
 	}
 
 	ezr_serve() (
 		if [[ ! -f $1 ]]; then
-			echo $boldred"You first have to run '$ProgName repo setup'!"
+			echo "${boldred}You first have to run '$ProgName repo setup'!"
 		else
-			source $1
-			cd $repoloc
-			echo $gray"Starting the http server ..."
+			source "$1"
+			cd "$repoloc"
+			echo "${gray}Starting the http server ..."
 			python -m http.server $portnum
 		fi
 	)
@@ -191,9 +198,11 @@ WantedBy=multi-user.target
 }
 
 eza_refreshcaches() (
+	echo "${gray}Refreshing packagelists ..."
 	rm -f $aurloc $offloc
-	curl https://aur.archlinux.org/packages.gz | gunzip >$aurloc
+	curl -sSL https://aur.archlinux.org/packages.gz | gunzip >$aurloc
 	pacman -Sql core community extra multilib >$offloc
+	echo "${boldgreen}Refreshed packagelists!"
 )
 
 eza_version() (
@@ -313,28 +322,35 @@ eza_build() (
 )
 
 eza_clean() (
-	echo $gray"Cleaning the buildspace ..."
-	for f in $(find $buildspace -maxdepth 1 -type d); do
-		[[ $f == "." ]] && continue
-		rm -rf $f
+	echo "${gray}Cleaning the buildspace ..."
+	for f in $(find "$buildspace" -maxdepth 1 -type d); do
+		[[ "$f" == "." ]] && continue
+		rm -rf "$f"
 	done
-	echo $green"Cleaned the buildspace!"
+	echo "${boldgreen}Cleaned the buildspace!"
 )
 
 eza_addall() (
-	echo $gray"Adding all built packages to the repository ..."
+	echo "${gray}Adding all built packages to the repository ..."
 	for f in $(find $outdir -type f ! -name "*.sig"); do
 		eza_repo add $f
 		rm $f
 		rm $f.sig
 	done
-	echo $green"Added all packages to repo!"
+	echo "${boldgreen}Added all packages to repo!"
 )
+
+if [[ ! -d "$HOME/.pkgbuilder" ]]; then
+	mkdir -p "$HOME/.pkgbuilder"
+fi
 
 subcommand=$1
 case $subcommand in
 "" | "-h" | "--help")
 	eza_help
+	;;
+"rfc")
+	eza_refreshcaches	
 	;;
 *)
 	shift
