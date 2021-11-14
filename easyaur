@@ -129,14 +129,19 @@ WantedBy=multi-user.target
 	}
 
 	ezr_serve() (
-		if [[ ! -f $1 ]]; then
-			echo "${boldred}You first have to run '$ProgName repo setup'!"
-		else
-			source "$1"
-			cd "$repoloc"
-			echo "${gray}Starting the http server ..."
-			python -m http.server $portnum
+		confloc="$HOME/.ezrepo"
+		if [[ ! -z "$1" ]]; then
+			if [[ ! -f "$1" ]]; then
+				echo "${boldred}You first have to run '$ProgName repo setup'!"
+				exit 1
+			else
+				confloc="$1"
+			fi
 		fi
+		source "$confloc"
+		cd "$repoloc"
+		echo "${gray}Starting the http server ..."
+		python -m http.server $portnum
 	)
 
 	ezr_add() (
