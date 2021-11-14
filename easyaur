@@ -35,10 +35,10 @@ pkg() (
 
 eza_search() (
 	echo "Searching in official repo package list ..."
-	if rg -q "$1" "$offloc"; then
+	if rg -q "^$1\$" "$offloc"; then
 		echo "Package is available in the official repositories!"
 	else
-		if rg -q "$1" "$aurloc"; then
+		if rg -q "^$1\$" "$aurloc"; then
 			echo "Package is available in the AUR!"
 		else
 			echo $boldred"Couldn't find a package with that name, sorry!"
