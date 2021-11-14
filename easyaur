@@ -13,7 +13,11 @@ ROOT=$(pwd)
 # Colors
 bold="$(tput bold)"
 red="$(tput setaf 160)"
+green="$(tput setaf 40)"
+gray="$(tput setaf 248)"
 boldred="$bold$red"
+boldgreen="$bold$green"
+reset="$(tput init)"
 # Locs
 buildspace="$HOME/.pkgbuilder"
 outdir="$buildspace/out"
@@ -34,12 +38,13 @@ pkg() (
 )
 
 eza_search() (
-	echo "Searching in official repo package list ..."
+	echo $gray"Searching in official repo package list ..."
 	if rg -q "^$1\$" "$offloc"; then
-		echo "Package is available in the official repositories!"
+		echo $boldgreen"Package is available in the official repositories!"
 	else
+		echo $gray"Searching in AUR package list ..."
 		if rg -q "^$1\$" "$aurloc"; then
-			echo "Package is available in the AUR!"
+			echo $boldgreen"Package is available in the AUR!"
 		else
 			echo $boldred"Couldn't find a package with that name, sorry!"
 		fi
@@ -73,15 +78,15 @@ eza_repo() {
 	)
 
 	ezr_setup() {
-		echo "Creating config file ..."
+		echo $gray"Creating config file ..."
 		touch $conf
-		echo "Enter the name for the repository (e.g. like core/community/multilib)"
+		echo $bold"Enter the name for the repository (e.g. like core/community/multilib)"
 		read reponame
-		echo "Enter the absolute path where the repository should be stored"
+		echo $bold"Enter the absolute path where the repository should be stored"
 		read repoloc
-		echo "Enter the port where the repository should get served"
+		echo $bold"Enter the port where the repository should get served"
 		read portnum
-		echo "Should the database and packages be signed? [Y/n]"
+		echo $bold"Should the database and packages be signed? [Y/n]"
 		read sign
 		echo "#!/bin/sh" >$conf
 		echo "##### CONFIG ######" >>$conf
@@ -93,10 +98,10 @@ eza_repo() {
 		else
 			echo "sign=no" >>$conf
 		fi
-		echo "Created the config file at $conf!"
-		echo "Finishing now ..."
+		echo $boldgreen"Created the config file at $conf!"
+		echo $gray"Finishing now ..."
 		mkdir -p $repoloc
-		echo "(sudo) Creating service file"
+		echo $gray"(sudo) Creating service file"
 		sudo sh -c "cat > /etc/systemd/system/easyrepo.service <<- EOF
 [Unit]
 Description=Serve your archlinux repository
@@ -111,7 +116,7 @@ Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 	EOF"
-		echo "(sudo) Reloading daemon files and starting+enabling the service"
+		echo $gray"(sudo) Reloading daemon files and starting+enabling the service"
 		sudo systemctl daemon-reload
 		sudo systemctl enable --now easyrepo
 	}
@@ -122,6 +127,7 @@ WantedBy=multi-user.target
 		else
 			source $1
 			cd $repoloc
+			echo $gray"Starting the http server ..."
 			python -m http.server $portnum
 		fi
 	)
@@ -191,10 +197,10 @@ eza_refreshcaches() (
 )
 
 eza_version() (
-	echo "EasyAUR version $VERSION"
+	echo "EasyAUR version ${bold}${VERSION}${reset}"
 	echo ""
 	echo "This project is licensed under GPLv3, respect the license in any way."
-	echo "Please report bugs and send feature requests/ideas to https://github.com/legendary-cookie/easyaur/issues!"
+	echo "Please report bugs and send feature requests/ideas to ${bold}https://github.com/legendary-cookie/easyaur/issues!"
 	echo ""
 )
 
@@ -204,14 +210,14 @@ move_built_pkgs() (
 )
 
 aurbuild() (
-	echo "Building Package $1 from aur"
+	echo $gray"Building Package $1 from aur"
 	loc="$buildspace/$1"
 	if [[ -d $loc ]]; then
 		cd $loc
 		if [[ -f .AUR ]]; then
 			git pull --quiet
 		else
-			echo "$1 is not an AUR package! Try deleting the folder $(realpath $loc)"
+			echo $boldred"$1 is not an AUR package! Try deleting the folder $(realpath $loc)"
 			exit 1
 		fi
 	else
@@ -237,8 +243,8 @@ aurbuild() (
 )
 
 build() (
-	echo "Building: $1"
-	echo "Current workdir: $ROOT"
+	echo $gray"Building: $1"
+	echo $gray"Current workdir: $ROOT"
 	# Gets current date for use as $now
 	now=$(date +'%d-%m-%Y-%r')
 	echo "$now"
@@ -246,14 +252,14 @@ build() (
 	# Checks if already cloned
 	if [[ -d $loc ]]; then
 		cd $loc
-		[[ -f ".AUR" ]] && echo "$1 Is an AUR package!" && exit
+		[[ -f ".AUR" ]] && echo $boldred"$1 Is an AUR package!" && exit
 		asp update
 		git pull
 	else
 		cd $buildspace
 		asp export $1
 		if [ $? -ne 0 ]; then
-			echo "Package '$1' does not exist / errors while cloning"
+			echo $boldred"Package '$1' does not exist / errors while cloning"
 			exit
 		fi
 		cd $loc
@@ -262,7 +268,7 @@ build() (
 	if [[ -f "PKGBUILD" ]]; then
 		pkg
 		if [[ ! $? == 0 ]]; then
-			echo $boldred"ERROR: Operation failed"
+			echo $boldred"ERROR: Makepkg failed with exit code $?"
 			exit 1
 		else
 			move_built_pkgs
@@ -279,7 +285,7 @@ eza_setup() (
 
 eza_build() (
 	if [[ $# -eq 0 ]]; then
-		echo "Provide the package to build!"
+		echo $boldred"You have to provide the package to build!"
 		exit 1
 	fi
 
@@ -290,12 +296,12 @@ eza_build() (
 			continue
 		fi
 		if grep -Fxq "$pkg" "$offloc"; then
-			echo "Building official package ..."
+			echo $gray"Building official package ..."
 			build "$pkg"
 			continue
 		else
 			if grep -Fxq "$pkg" "$aurloc"; then
-				echo "Building AUR package ..."
+				echo $gray"Building AUR package ..."
 				aurbuild "$pkg"
 				continue
 			else
@@ -307,18 +313,22 @@ eza_build() (
 )
 
 eza_clean() (
+	echo $gray"Cleaning the buildspace ..."
 	for f in $(find $buildspace -maxdepth 1 -type d); do
 		[[ $f == "." ]] && continue
 		rm -rf $f
 	done
+	echo $green"Cleaned the buildspace!"
 )
 
 eza_addall() (
+	echo $gray"Adding all built packages to the repository ..."
 	for f in $(find $outdir -type f ! -name "*.sig"); do
 		eza_repo add $f
 		rm $f
 		rm $f.sig
 	done
+	echo $green"Added all packages to repo!"
 )
 
 subcommand=$1
@@ -330,8 +340,8 @@ case $subcommand in
 	shift
 	eza_${subcommand} $@
 	if [ $? = 127 ]; then
-		echo "Error: '$subcommand' is not a known subcommand." >&2
-		echo "       Run '$ProgName --help' for a list of known subcommands." >&2
+		echo "${boldred}Error: ${reset}'${subcommand}' is not a known subcommand." >&2
+		echo "       Run '${ProgName} --help' for a list of known subcommands." >&2
 		exit 1
 	fi
 	;;
