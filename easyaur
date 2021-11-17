@@ -38,12 +38,16 @@ pkg() (
 )
 
 eza_search() (
-	echo $gray"Searching in official repo package list ..."
-	if rg -q "^$1\$" "$offloc"; then
+	echo "${gray}Searching in official repo package list ..."
+	grepcmd="grep"
+	if command -v rg &>/dev/null; then
+		grepcmd="rg"
+	fi
+	if $grepcmd -q "^$1\$" "$offloc"; then
 		echo "${boldgreen}Package is available in the official repositories!"
 	else
 		echo "${gray}Searching in AUR package list ..."
-		if rg -q "^$1\$" "$aurloc"; then
+		if $grepcmd -q "^$1\$" "$aurloc"; then
 			echo "${boldgreen}Package is available in the AUR!"
 		else
 			echo "${boldred}Couldn't find a package with that name, sorry!"
