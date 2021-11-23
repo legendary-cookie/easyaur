@@ -301,9 +301,20 @@ eza_setup() (
 	eza_refreshcaches
 )
 
+eza_addall() (
+        echo "${gray}Adding all built packages to the repository ..."
+        for f in $(find $outdir -type f ! -name "*.sig"); do
+                eza_repo add $f
+                rm $f
+                rm $f.sig
+        done
+        echo "${boldgreen}Added all packages to repo!"
+)
+
+
 eza_build() (
 	if [[ $# -eq 0 ]]; then
-		echo $boldred"You have to provide the package to build!"
+		echo "${boldred}You have to provide the package(s) to build!"
 		exit 1
 	fi
 
@@ -314,20 +325,22 @@ eza_build() (
 			continue
 		fi
 		if grep -Fxq "$pkg" "$offloc"; then
-			echo $gray"Building official package ..."
+			echo "${gray}Building official package ..."
 			build "$pkg"
 			continue
 		else
 			if grep -Fxq "$pkg" "$aurloc"; then
-				echo $gray"Building AUR package ..."
+				echo "${gray}Building AUR package ..."
 				aurbuild "$pkg"
 				continue
 			else
-				echo $boldred"The specified package does not exist on the AUR nor on the normal repos!"
+				echo "${boldred}The specified package does not exist on the AUR nor on the normal repos!"
 				continue
 			fi
 		fi
 	done
+
+	eza_addall
 )
 
 eza_clean() (
@@ -337,16 +350,6 @@ eza_clean() (
 		rm -rf "$f"
 	done
 	echo "${boldgreen}Cleaned the buildspace!"
-)
-
-eza_addall() (
-	echo "${gray}Adding all built packages to the repository ..."
-	for f in $(find $outdir -type f ! -name "*.sig"); do
-		eza_repo add $f
-		rm $f
-		rm $f.sig
-	done
-	echo "${boldgreen}Added all packages to repo!"
 )
 
 if [[ ! -d "$HOME/.pkgbuilder" ]]; then
