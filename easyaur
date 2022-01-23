@@ -1,6 +1,6 @@
 #!/bin/bash
 #########################################
-#   COPYRIGHT 2021 VINCENT SCHWEIGER	#
+#   COPYRIGHT 2022 Vincent Schweiger	#
 #   THIS SCRIPT IS LICENSED UNDER THE	#
 #	GPLv3 LICENSE.			#
 #	RESPECT IT IN ANY WAY.		#
@@ -8,7 +8,7 @@
 
 # Program info
 ProgName=$(basename $0)
-VERSION="1.4"
+VERSION="1.5"
 ROOT=$(pwd)
 # Colours
 bold="$(tput bold)"
